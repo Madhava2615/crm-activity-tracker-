@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Activity Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .form-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .activities-section {
+            padding: 30px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .activities-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #4facfe;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item.closed {
+            opacity: 0.7;
+            border-left-color: #28a745;
+            background: #f1f8e9;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .activity-type {
+            font-size: 0.9em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .activity-type.call { background: #ff6b6b; }
+        .activity-type.meeting { background: #4ecdc4; }
+        .activity-type.email { background: #45b7d1; }
+
+        .activity-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .activity-details {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .activity-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-close {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-close:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 CRM Activity Tracker</h1>
+            <p>Track calls, meetings, and emails efficiently</p>
+        </div>
+
+        <div class="form-section">
+            <form id="activityForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="activityType">Activity Type *</label>
+                        <select id="activityType" required>
+                            <option value="">Select Type</option>
+                            <option value="call">📞 Call</option>
+                            <option value="meeting">🤝 Meeting</option>
+                            <option value="email">✉️ Email</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactName">Contact Name *</label>
+                        <input type="text" id="contactName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityDate">Date *</label>
+                        <input type="datetime-local" id="activityDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration (mins)</label>
+                        <input type="number" id="duration" min="1" max="1440">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" rows="4" placeholder="Activity details, outcomes, next steps..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ Add Activity</button>
+            </form>
+        </div>
+
+        <div class="activities-section">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div>Total Activities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="openCount">0</div>
+                    <div>Open Activities</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="closedCount">0</div>
+                    <div>Closed Activities</div>
+                </div>
+            </div>
+
+            <ul class="activities-list" id="activitiesList">
+                <li class="empty-state">
+                    <h3>🎉 No activities yet</h3>
+                    <p>Add your first activity using the form above!</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        class ActivityTracker {
+            constructor() {
+                this.activities = JSON.parse(localStorage.getItem('crmActivities')) || [];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+            }
+
+            bindEvents() {
+                document.getElementById('activityForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addActivity();
+                });
+            }
+
+            addActivity() {
+                const formData = new FormData(document.getElementById('activityForm'));
+                const activity = {
+                    id: Date.now(),
+                    type: document.getElementById('activityType').value,
+                    contactName: document.getElementById('contactName').value,
+                    date: document.getElementById('activityDate').value,
+                    duration: parseInt(document.getElementById('duration').value) || 0,
+                    notes: document.getElementById('notes').value,
+                    closed: false,
+                    closedDate: null
+                };
+
+                this.activities.unshift(activity);
+                this.save();
+                this.render();
+                this.resetForm();
+            }
+
+            toggleClose(id) {
+                const activity = this.activities.find(a => a.id === id);
+                if (activity) {
+                    activity.closed = !activity.closed;
+                    activity.closedDate = activity.closed ? new Date().toISOString() : null;
+                    this.save();
+                    this.render();
+                }
+            }
+
+            deleteActivity(id) {
+                this.activities = this.activities.filter(a => a.id !== id);
+                this.save();
+                this.render();
+            }
+
+            resetForm() {
+                document.getElementById('activityForm').reset();
+                document.getElementById('activityDate').valueAsDate = new Date();
+            }
+
+            save() {
+                localStorage.setItem('crmActivities', JSON.stringify(this.activities));
+            }
+
+            getStats() {
+                const total = this.activities.length;
+                const open = this.activities.filter(a => !a.closed).length;
+                const closed = total - open;
+                return { total, open, closed };
+            }
+
+            render() {
+                this.renderStats();
+                this.renderActivities();
+            }
+
+            renderStats() {
+                const stats = this.getStats();
+                document.getElementById('totalCount').textContent = stats.total;
+                document.getElementById('openCount').textContent = stats.open;
+                document.getElementById('closedCount').textContent = stats.closed;
+            }
+
+            renderActivities() {
+                const list = document.getElementById('activitiesList');
+                const emptyState = document.querySelector('.empty-state');
+
+                if (this.activities.length === 0) {
+                    list.innerHTML = `
+                        <li class="empty-state">
+                            <h3>🎉 No activities yet</h3>
+                            <p>Add your first activity using the form above!</p>
+                        </li>
+                    `;
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                list.innerHTML = this.activities.map(activity => `
+                    <li class="activity-item ${activity.closed ? 'closed' : ''}">
+                        <div class="activity-header">
+                            <div>
+                                <span class="activity-type ${activity.type}">${this.formatType(activity.type)}</span>
+                                <strong>${activity.contactName}</strong>
+                            </div>
+                            <div>
+                                <div class="activity-date">${this.formatDate(activity.date)}</div>
+                                ${activity.duration ? `<div>${activity.duration} mins</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="activity-details">${this.formatNotes(activity.notes)}</div>
+                        ${activity.closed ? `
+                            <div style="color: #28a745; font-size: 0.9em; margin-bottom: 10px;">
+                                ✅ Closed on ${this.formatDate(activity.closedDate)}
+                            </div>
+                        ` : ''}
+                        <div class="activity-actions">
+                            <button class="btn btn-close" onclick="tracker.toggleClose(${activity.id})">
+                                ${activity.closed ? '🔓 Reopen' : '✅ Close'}
+                            </button>
+                            <button class="btn btn-delete" onclick="tracker.deleteActivity(${activity.id})">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </li>
+                `).join('');
+            }
+
+            formatType(type) {
+                const types = {
+                    call: 'Call',
+                    meeting: 'Meeting',
+                    email: 'Email'
+                };
+                return types[type] || type;
+            }
+
+            formatDate(dateString) {
+                return new Date(dateString).toLocaleString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            formatNotes(notes) {
+                if (!notes) return '<em>No notes</em>';
+                return notes.replace(/\n/g, '<br>');
+            }
+        }
+
+        // Initialize tracker
+        const tracker = new ActivityTracker();
+        window.tracker = tracker;
+    </script>
+</body>
+</html>
